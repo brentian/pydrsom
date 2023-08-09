@@ -32,14 +32,7 @@ parser.add_argument(
     required=False,
     type=str,
     default="drsom",
-    choices=[
-        "adam",
-        "sgd1",
-        "sgd4",
-        "sgd2",
-        "sgd3",
-        "drsom",
-    ],
+    choices=["adam", "sgd1", "sgd4", "sgd2", "sgd3", "drsom",],
 )
 parser.add_argument(
     "--model",
@@ -47,8 +40,7 @@ parser.add_argument(
     type=str,
     default="simple",
     choices=["cnn", "simple"],
-    help=
-    """model to train""",
+    help="""model to train""",
 )
 parser.add_argument(
     "--data_size", required=False, type=int, default=int(1e3), help="total data size"
@@ -257,33 +249,21 @@ if __name__ == "__main__":
     # download training data from open datasets.
     try:
         training_data = datasets.FashionMNIST(
-            root="data",
-            train=True,
-            download=False,
-            transform=ToTensor(),
+            root="data", train=True, download=False, transform=ToTensor(),
         )
         # Download test data from open datasets.
         test_data = datasets.FashionMNIST(
-            root="data",
-            train=False,
-            download=False,
-            transform=ToTensor(),
+            root="data", train=False, download=False, transform=ToTensor(),
         )
     except:
         # not exists
         training_data = datasets.FashionMNIST(
-            root="data",
-            train=True,
-            download=True,
-            transform=ToTensor(),
+            root="data", train=True, download=True, transform=ToTensor(),
         )
 
         # Download test data from open datasets.
         test_data = datasets.FashionMNIST(
-            root="data",
-            train=False,
-            download=True,
-            transform=ToTensor(),
+            root="data", train=False, download=True, transform=ToTensor(),
         )
 
     training_data.data = training_data.data[: args.data_size]

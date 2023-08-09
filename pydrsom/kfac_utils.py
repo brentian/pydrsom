@@ -19,14 +19,13 @@ def _extract_patches(x, kernel_size, stride, padding):
     :return: (batch_size, out_h, out_w, in_c*kh*kw)
     """
     if padding[0] + padding[1] > 0:
-        x = F.pad(x, (padding[1], padding[1], padding[0],
-                      padding[0])).data  # Actually check dims
+        x = F.pad(
+            x, (padding[1], padding[1], padding[0], padding[0])
+        ).data  # Actually check dims
     x = x.unfold(2, kernel_size[0], stride[0])
     x = x.unfold(3, kernel_size[1], stride[1])
     x = x.transpose_(1, 2).transpose_(2, 3).contiguous()
-    x = x.view(
-        x.size(0), x.size(1), x.size(2),
-        x.size(3) * x.size(4) * x.size(5))
+    x = x.view(x.size(0), x.size(1), x.size(2), x.size(3) * x.size(4) * x.size(5))
     return x
 
 
@@ -34,11 +33,10 @@ def update_running_stat(aa, m_aa, stat_decay):
     # using inplace operation to save memory!
     m_aa *= stat_decay / (1 - stat_decay)
     m_aa += aa
-    m_aa *= (1 - stat_decay)
+    m_aa *= 1 - stat_decay
 
 
 class ComputeMatGrad:
-
     @classmethod
     def __call__(cls, input, grad_output, layer):
         if isinstance(layer, nn.Linear):
@@ -74,20 +72,25 @@ class ComputeMatGrad:
         :return:
         """
         with torch.no_grad():
-            input = _extract_patches(input, layer.kernel_size, layer.stride, layer.padding)
+            input = _extract_patches(
+                input, layer.kernel_size, layer.stride, layer.padding
+            )
             input = input.view(-1, input.size(-1))  # b * hw * in_c*kh*kw
             grad_output = grad_output.transpose(1, 2).transpose(2, 3)
-            grad_output = try_contiguous(grad_output).view(grad_output.size(0), -1, grad_output.size(-1))
+            grad_output = try_contiguous(grad_output).view(
+                grad_output.size(0), -1, grad_output.size(-1)
+            )
             # b * hw * out_c
             if layer.bias is not None:
                 input = torch.cat([input, input.new(input.size(0), 1).fill_(1)], 1)
-            input = input.view(grad_output.size(0), -1, input.size(-1))  # b * hw * in_c*kh*kw
-            grad = torch.einsum('abm,abn->amn', (grad_output, input))
+            input = input.view(
+                grad_output.size(0), -1, input.size(-1)
+            )  # b * hw * in_c*kh*kw
+            grad = torch.einsum("abm,abn->amn", (grad_output, input))
         return grad
 
 
 class ComputeCovA:
-
     @classmethod
     def compute_cov_a(cls, a, layer):
         return cls.__call__(a, layer)
@@ -113,7 +116,7 @@ class ComputeCovA:
         a = a.view(-1, a.size(-1))
         if layer.bias is not None:
             a = torch.cat([a, a.new(a.size(0), 1).fill_(1)], 1)
-        a = a/spatial_size
+        a = a / spatial_size
         # FIXME(CW): do we need to divide the output feature map's size?
         return a.t() @ (a / batch_size)
 
@@ -127,7 +130,6 @@ class ComputeCovA:
 
 
 class ComputeCovG:
-
     @classmethod
     def compute_cov_g(cls, g, layer, batch_averaged=False):
         """
@@ -179,16 +181,10 @@ class ComputeCovG:
         return cov_g
 
 
+if __name__ == "__main__":
 
-if __name__ == '__main__':
     def test_ComputeCovA():
         pass
 
     def test_ComputeCovG():
         pass
-
-
-
-
-
-
